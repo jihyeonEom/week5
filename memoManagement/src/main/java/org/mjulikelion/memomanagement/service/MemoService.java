@@ -1,14 +1,14 @@
 package org.mjulikelion.memomanagement.service;
 
 import lombok.AllArgsConstructor;
-import org.mjulikelion.memomanagement.dto.MemoCreateDto;
-import org.mjulikelion.memomanagement.dto.response.LikeResponseData;
-import org.mjulikelion.memomanagement.dto.response.MemoListResponseData;
-import org.mjulikelion.memomanagement.dto.response.MemoResponseData;
+import org.mjulikelion.memomanagement.dto.memodto.MemoCreateDto;
+import org.mjulikelion.memomanagement.dto.memodto.MemoUpdateDto;
+import org.mjulikelion.memomanagement.dto.response.memoresponse.MemoListResponseData;
+import org.mjulikelion.memomanagement.dto.response.memoresponse.MemoResponseData;
+import org.mjulikelion.memomanagement.dto.response.userlikeresponse.UserLikeResponseData;
 import org.mjulikelion.memomanagement.errorcode.ErrorCode;
 import org.mjulikelion.memomanagement.exception.EmailAlreadyExistsException;
 import org.mjulikelion.memomanagement.exception.MemoNotFoundException;
-import org.mjulikelion.memomanagement.exception.UserDoesNotHaveAccessException;
 import org.mjulikelion.memomanagement.exception.UserNotFoundException;
 import org.mjulikelion.memomanagement.model.Memo;
 import org.mjulikelion.memomanagement.model.MemoLikes;
@@ -54,10 +54,11 @@ public class MemoService {
                 return true;
             }
         }
-        return false;
+        throw new UserNotFoundException(ErrorCode.USER_DOES_NOT_HAVE_ACCESS);
     }
 
-    // 유저가 작성한 메모를 메모 아이디를 통해 조회
+    // 메모를 메모 아이디를 통해 조회
+    // 다른 사람이 작성한 메모도 조회할 수 있다.
     public MemoResponseData getMemoByMemoId(UUID userId, UUID memoId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
@@ -65,9 +66,7 @@ public class MemoService {
         if (!memoRepository.existsById(memoId)) {
             throw new MemoNotFoundException(ErrorCode.MEMO_NOT_FOUND, "Memo not found");
         }
-        if (!isUserHaveAccessTo(userId, memoId)) {
-            throw new UserDoesNotHaveAccessException(ErrorCode.USER_DOES_NOT_HAVE_ACCESS);
-        }
+
         return new MemoResponseData(memoRepository.findMemoById(memoId));
     }
 
@@ -92,7 +91,7 @@ public class MemoService {
     }
 
     // 해당 메모의 좋아요를 누른 유저의 이름과 좋아요 갯수 반환
-    public LikeResponseData getLikeByMemoId(UUID memoId) {
+    public UserLikeResponseData getLikeByMemoId(UUID memoId) {
         if (!memoRepository.existsById(memoId)) {
             throw new MemoNotFoundException(ErrorCode.MEMO_NOT_FOUND, "Memo not found");
         }
@@ -104,7 +103,7 @@ public class MemoService {
         }
 
         int count = likeUserList.size();
-        return new LikeResponseData(likeUserList, count);
+        return new UserLikeResponseData(likeUserList, count);
     }
 
     // 해당 유저가 작성한 메모를 메모 아이디를 통해 삭제
@@ -115,26 +114,24 @@ public class MemoService {
         if (!memoRepository.existsById(memoId)) {
             throw new MemoNotFoundException(ErrorCode.MEMO_NOT_FOUND, "Memo not found");
         }
-        if (!isUserHaveAccessTo(userId, memoId)) {
-            throw new UserDoesNotHaveAccessException(ErrorCode.USER_DOES_NOT_HAVE_ACCESS);
-        }
+        isUserHaveAccessTo(userId, memoId); // 접근권한 검사
+
         this.memoRepository.deleteMemoById(memoId);
     }
 
     // 해당 유저가 작성한 메모를 메모 아이디를 통해 수정
-    public void updateMemoByMemoId(UUID userId, String content, String title, UUID memoId) {
+    public void updateMemoByMemoId(UUID userId, MemoUpdateDto memoUpdateDto, UUID memoId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
         }
         if (!memoRepository.existsById(memoId)) {
             throw new MemoNotFoundException(ErrorCode.MEMO_NOT_FOUND, "Memo not found");
         }
-        if (!isUserHaveAccessTo(userId, memoId)) {
-            throw new UserDoesNotHaveAccessException(ErrorCode.USER_DOES_NOT_HAVE_ACCESS);
-        }
+        isUserHaveAccessTo(userId, memoId); // 접근권한 검사
+
         Memo memo = this.memoRepository.findMemoById(memoId);
-        memo.setTitle(title);
-        memo.setContent(content);
+        memo.setTitle(memoUpdateDto.getTitle());
+        memo.setContent(memoUpdateDto.getContent());
         this.memoRepository.save(memo);
     }
 }

@@ -1,7 +1,8 @@
 package org.mjulikelion.memomanagement.service;
 
 import lombok.AllArgsConstructor;
-import org.mjulikelion.memomanagement.dto.OrganizationCreateDto;
+import org.mjulikelion.memomanagement.dto.organizationdto.OrganizationCreateDto;
+import org.mjulikelion.memomanagement.dto.organizationdto.OrganizationUpdateDto;
 import org.mjulikelion.memomanagement.errorcode.ErrorCode;
 import org.mjulikelion.memomanagement.exception.OrganizationNotFoundException;
 import org.mjulikelion.memomanagement.exception.UserNotFoundException;
@@ -10,6 +11,7 @@ import org.mjulikelion.memomanagement.model.Organization;
 import org.mjulikelion.memomanagement.model.User;
 import org.mjulikelion.memomanagement.model.UserOrganization;
 import org.mjulikelion.memomanagement.model.repository.OrganizationRepository;
+import org.mjulikelion.memomanagement.model.repository.UserOrganizationRepository;
 import org.mjulikelion.memomanagement.model.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,7 @@ public class OrganizationService {
 
     private final OrganizationRepository organizationRepository;
     private final UserRepository userRepository;
+    private final UserOrganizationRepository userOrganizationRepository;
 
     // org 생성
     public void createOrganization(OrganizationCreateDto organizationCreateDto) {
@@ -38,6 +41,16 @@ public class OrganizationService {
         this.organizationRepository.deleteOrganizationById(orgId);
     }
 
+    // org 이름 변경
+    public void updateOrganizationById(UUID orgId, OrganizationUpdateDto organizationUpdateDto) {
+        if (!this.organizationRepository.existsById(orgId)) {
+            throw new OrganizationNotFoundException(ErrorCode.ORGANIZATION_NOT_FOUND);
+        }
+        Organization organization = this.organizationRepository.findOrganizationById(orgId);
+        organization.setName(organizationUpdateDto.getName());
+        this.organizationRepository.save(organization);
+    }
+
     // user의 org 가입
     public void joinOrganization(UUID userId, UUID orgId) {
         if (!this.userRepository.existsById(userId)) {
@@ -48,36 +61,44 @@ public class OrganizationService {
         }
         User user = this.userRepository.findUserById(userId);
         Organization organization = this.organizationRepository.findOrganizationById(orgId);
-        UserOrganization userOrganization = new UserOrganization();
 
         // org에 유저 등록
-        userOrganization.setUser(user);
-        userOrganization.setOrganization(organization);
+        UserOrganization userOrganization = new UserOrganization(organization, user);
 
-        this.organizationRepository.save(userOrganization);
+        this.userOrganizationRepository.save(userOrganization);
     }
 
     // user의 org 탈퇴
-    public void leaveOrganization(UUID userOrgId, UUID userId) {
+    public void leaveOrganization(UUID orgId, UUID userId) {
         if (!this.userRepository.existsById(userId)) {
             throw new UserNotFoundException(ErrorCode.USER_NOT_FOUND);
         }
-        if (!isUserInOrganization(userId, userOrgId)) {
-            throw new UserNotInOrganizationException(ErrorCode.USER_NOT_IN_ORGANIZATION);
+        if (!this.organizationRepository.existsById(orgId)) {
+            throw new OrganizationNotFoundException(ErrorCode.ORGANIZATION_NOT_FOUND);
         }
+        UUID userOrgId = this.isUserInOrganization(orgId, userId);
 
-        this.organizationRepository.deleteUserOrganizationById(userOrgId);
+        System.out.println("-------------------");
+        this.userOrganizationRepository.deleteUserOrganizationById(userOrgId);
+        System.out.println("-------------------");
+
     }
 
     // user가 해당 org에 속해있는지 확인
-    public boolean isUserInOrganization(UUID userId, UUID userOrgId) {
+    // 있으면 UserOrganiztion의 Id를 반환
+    public UUID isUserInOrganization(UUID orgId, UUID userId) {
         User user = this.userRepository.findUserById(userId);
-        List<UserOrganization> userOrganization = user.getUserOrganizations();
-        for (UserOrganization userOrg : userOrganization) {
-            if (userOrg.getOrganization().getId().equals(userOrgId)) {
-                return true;
+        List<UserOrganization> userOrganizations = user.getUserOrganizations();
+
+        for (UserOrganization userOrg : userOrganizations) {
+
+            if (userOrg.getOrganization().getId().equals(orgId)) {
+                if (userOrg.getUser().getId().equals(userId)) {
+                    return userOrg.getId();
+                }
+                throw new UserNotInOrganizationException(ErrorCode.USER_NOT_IN_ORGANIZATION);
             }
         }
-        return false;
+        throw new UserNotInOrganizationException(ErrorCode.USER_NOT_IN_ORGANIZATION);
     }
 }

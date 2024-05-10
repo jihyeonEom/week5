@@ -1,4 +1,4 @@
-package org.mjulikelion.memomanagement.dto;
+package org.mjulikelion.memomanagement.dto.errordto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

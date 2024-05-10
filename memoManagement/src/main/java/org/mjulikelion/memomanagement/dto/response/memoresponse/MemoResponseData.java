@@ -1,4 +1,4 @@
-package org.mjulikelion.memomanagement.dto.response;
+package org.mjulikelion.memomanagement.dto.response.memoresponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

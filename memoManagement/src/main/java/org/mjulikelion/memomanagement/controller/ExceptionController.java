@@ -1,7 +1,7 @@
 package org.mjulikelion.memomanagement.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.mjulikelion.memomanagement.dto.ErrorResponseDto;
+import org.mjulikelion.memomanagement.dto.errordto.ErrorResponseDto;
 import org.mjulikelion.memomanagement.errorcode.ErrorCode;
 import org.mjulikelion.memomanagement.exception.*;
 import org.springframework.http.HttpStatus;

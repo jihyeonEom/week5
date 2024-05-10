@@ -18,5 +18,5 @@ public interface OrganizationRepository extends JpaRepository<Organization, UUID
     Organization findOrganizationById(UUID organizationId);
 
     @Transactional
-    void deleteUserOrganizationById(UUID userOrganizationId);
+    void deleteUserOrganizationById(UUID userOrgId);
 }

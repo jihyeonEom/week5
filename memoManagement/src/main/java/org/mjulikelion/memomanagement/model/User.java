@@ -32,6 +32,6 @@ public class User extends BaseEntity {
     // user 필드를 기준으로 One To Many 관계를 맺는다. user가 삭제되면 연관된 memo_like도 삭제된다. user가 null이 되면 memo_like도 삭제된다. 지연로딩을 사용한다.
     private List<MemoLikes> memoLikes;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<UserOrganization> userOrganizations;
 }

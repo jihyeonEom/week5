@@ -1,9 +1,9 @@
 package org.mjulikelion.memomanagement.service;
 
 import lombok.AllArgsConstructor;
-import org.mjulikelion.memomanagement.dto.UserCreateDto;
-import org.mjulikelion.memomanagement.dto.UserUpdateDto;
-import org.mjulikelion.memomanagement.dto.response.UserOrganizationResponseData;
+import org.mjulikelion.memomanagement.dto.response.userorgresponse.UserOrganizationResponseData;
+import org.mjulikelion.memomanagement.dto.userdto.UserCreateDto;
+import org.mjulikelion.memomanagement.dto.userdto.UserUpdateDto;
 import org.mjulikelion.memomanagement.errorcode.ErrorCode;
 import org.mjulikelion.memomanagement.exception.EmailAlreadyExistsException;
 import org.mjulikelion.memomanagement.exception.UserNotFoundException;
